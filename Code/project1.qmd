@@ -11,6 +11,8 @@ Exposure to Smoke During Pregnancy (SDP) and Environmental Tobacco Smoke (ETS) p
 
 The primary objectives for this report include analyzing descriptive statistics for outliers and missing data, formulating exposure variables for SDP and ETS while exploring their interrelationship. As well as delving into the connections among outcome variables concerning self-regulation, externalizing, and substance use, and conducting initial regressions to evaluate the influence of prenatal and postnatal exposure on these outcomes.
 
+Github Project Repository: github.com/Kdossal/2550_Project1
+
 ## **2. Data Cleanliness and Quality**
 
 After cleaning and preparation the original dataset was redused to consist of 78 variables from 49 participants. This cleaned dataset is the main focus of this Exploratory Data Analysis Report. A detailed code book, providing insights into the variable names and related data, is available on the project's Github under "Codebook".
@@ -127,7 +129,13 @@ Another challenge was found in the form of recall biases; this was particularly 
 
 In this reports preliminary exploratory data analysis on the potential effects of SDP and ETS on children's self-regulation, externalizing behavior, and substance use, early findings suggest possible negative implications of both SDP and ETS. ETS, in particular, appeared to have a significant impact on children's self-regulation. Our EDA also indicated a potential relationship between SDP and ETS, suggesting that mothers who smoked during pregnancy might also expose their children to secondhand smoke postnatally. However, these are initial insights, and the connection between these exposures and outcomes requires further examination. This EDA serves as a starting point for guiding more in-depth work in the future.
 
-## Code Appendix
+## Appendix
+
+### Github
+
+For full Code Appendix go to this Project Github Repo: github.com/Kdossal/2550_Project1 here you will find the project1.qmd file used to generate the report and the code used for my analyses.
+
+### Code
 
 ```{r}
 # Loading in data and Libraries
@@ -258,6 +266,7 @@ child_df <- child_df %>%
 ```
 
 ```{r}
+# Generating Missing data table
 missing <- child_df %>%
   summarise(
     N = colSums(is.na(child_df)),
@@ -289,8 +298,8 @@ cor_matrix <- cor(outcomes, use = "complete.obs")
 
 # Melt the correlation matrix for ggplot
 cor_df <- melt(cor_matrix) 
-# cor_df <- cor_df[abs(cor_df$value) > 0.5, ]
 
+# Corr Matrix for Outcomes
 ggplot(data = cor_df, aes(x = Var1, y = Var2)) + 
   geom_tile(aes(fill = value), color = "white") + 
   scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
@@ -306,6 +315,7 @@ ggplot(data = cor_df, aes(x = Var1, y = Var2)) +
 ```
 
 ```{r}
+# Summary Table for Outcome Variables
 summary_table <- outcomes %>%
   summarise(
     Missing = round(colSums(is.na(.)/nrow(.)), 2) * 100,
@@ -356,6 +366,7 @@ cor_matrix <- cor(ind_vars, use = "pairwise.complete.obs")
 # Melt the correlation matrix for ggplot
 cor_df <- melt(cor_matrix)
 
+# Correlation Matrix for exposure variables
 ggplot(data = cor_df, aes(x = Var1, y = Var2)) + 
   geom_tile(aes(fill = value), color = "white") + 
   scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
@@ -371,7 +382,7 @@ ggplot(data = cor_df, aes(x = Var1, y = Var2)) +
 ```
 
 ```{r}
-# Identify the continuous and binary variables
+# Identify continuous and binary variables
 continuous_vars <- c("cotimean_34wk", "cotimean_pp6mo_baby", "cotimean_pp6mo")
 binary_vars <- setdiff(names(ind_vars), continuous_vars)
 
@@ -397,6 +408,7 @@ binary_summary <- ind_vars %>%
     Missing = round(colSums(is.na(.)/nrow(.)), 2) * 100
   )
 
+# Summary table for binary exposure variables
 binary_summary %>%
   mutate() %>%
   mutate_all(linebreak) %>%
@@ -408,6 +420,7 @@ binary_summary %>%
                 font_size = 14) %>%
   row_spec(0, background = "#333333", color = "white")
 
+# Summary table for continuous exposure variables
 continuous_summary %>%
   mutate() %>%
   mutate_all(linebreak) %>%
@@ -527,6 +540,7 @@ summaries <- vars %>%
     Missing = round(colSums(is.na(.)/nrow(.)), 2) * 100
   )
 
+# Summary table for composite variables
 summaries %>%
   mutate() %>%
   mutate_all(linebreak) %>%
@@ -547,6 +561,7 @@ cor_matrix <- cor(vars, use = "complete.obs")
 # Melt the correlation matrix for ggplot
 cor_df <- melt(cor_matrix)
 
+# Corr Matrix for composite variables
 ggplot(data = cor_df, aes(x = Var1, y = Var2)) + 
   geom_tile(aes(fill = value), color = "white") + 
   scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
@@ -562,7 +577,7 @@ ggplot(data = cor_df, aes(x = Var1, y = Var2)) +
 ```
 
 ```{r}
-
+# Demographic Summary Table
 table1 <- child_df %>%
   select(page, psex, plang, pethnic, p_race, employ, 
          pedu, income, tage, language, tethnic, t_race) %>%
@@ -578,38 +593,34 @@ table1
 ```
 
 ```{r}
-
+# Regression model for SR
 model <- lm(SR ~ SDP + ETS + page + pethnic + pwhite + prace_other + 
               tage + language + tethnic + taian, 
             data = child_df)
 
-
-# Create the table
 summary(model)
-
-# Dropped page + psex + plang + language bcuz they did not have a strong effect or improve the model very much
 ```
 
 ```{r}
+# Regression model for EXT
 model <- lm(EXT ~ SDP + ETS + pethnic + tage + language +
               taian + tblack, 
             data = child_df)
 
-
-# Create the table
 summary(model)
 ```
 
 ```{r}
+# Regression model for SU
 logistic_model_simple <- glm(SU ~ SDP + ETS + pethnic + employ + pedu +
               income + tage + language + tethnic,
                              family = "binomial", data = child_df)
-summary(logistic_model_simple)
 
-# Dropped page, psex, plang, p_race, t_race, bcuz they did not have a strong effect or improve the model very much
+summary(logistic_model_simple)
 ```
 
 ```{r}
+# Plot for SR by ETS/SDP
 ggplot(child_df, aes(x=ETS, y=SR)) + 
   geom_point(aes(color = factor(SDP_lvl)), shape = 16, size = 2) +
   geom_smooth(method = "lm", se = FALSE, color='grey') +
@@ -625,6 +636,7 @@ ggplot(child_df, aes(x=ETS, y=SR)) +
 ```
 
 ```{r}
+# Plot for EXT by ETS/SDP
 ggplot(child_df, aes(x=ETS, y=EXT)) + 
   geom_point(aes(color = factor(SDP_lvl)), shape = 16, size = 2) +
   geom_smooth(method = "lm", se = FALSE, color='grey') +
@@ -640,6 +652,7 @@ ggplot(child_df, aes(x=ETS, y=EXT)) +
 ```
 
 ```{r}
+# Plot for SU by ETS/SDP
 ggplot(child_df %>% filter(!is.na(SU)), aes(x=ETS, y=factor(SU), fill = factor(SDP_lvl))) + 
   geom_boxplot(outlier.shape = NA) + # removes outliers
   scale_fill_manual(values = c("lightblue", "pink"), 

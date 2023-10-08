@@ -39,3 +39,16 @@ AIM 1: Investigate the impact of SDP/ETS on adolescents regarding self-regulatio
 AIM 2: Uncover connections between self-regulation at baseline and substance & externalizing at the 6- and 12-month follow-ups.
 
 AIM 3: Recognize self-regulation challenges that bridge the connection between SDP/ETS exposure and the degree of, and variation in, substance use (SU) and externalizing (EXT) severity over time.
+
+## Files
+
+# Code
+`first_data_clean.R:` Code used to clean the original data to the data using in this project report.
+`project1.qmd:` File used to produce report, houses all code used in the report and is well documented.
+
+# Data
+`project1.csv:` Data used in this project report.
+`Codebook.csv:` Data Codebook descriping variables and descriptions.
+
+# Images
+Collection of images used in the report.

@@ -1,0 +1,654 @@
+---
+title: "PHP 2550: Project 1"
+subtitle: "Due: October 8th at 11:59pm"
+format: pdf
+editor: visual
+---
+
+## **1. Introduction**
+
+Exposure to Smoke During Pregnancy (SDP) and Environmental Tobacco Smoke (ETS) poses significant health risks to children. Dr. Lauren Micalizzi's study seeks to understand the effects of SDP and ETS on children's behavior. Participants were sourced from a prior smoke avoidance intervention study involving low-income women, with a subset of adolescents and their mothers selected for this research.
+
+The primary objectives for this report include analyzing descriptive statistics for outliers and missing data, formulating exposure variables for SDP and ETS while exploring their interrelationship. As well as delving into the connections among outcome variables concerning self-regulation, externalizing, and substance use, and conducting initial regressions to evaluate the influence of prenatal and postnatal exposure on these outcomes.
+
+## **2. Data Cleanliness and Quality**
+
+After cleaning and preparation the original dataset was redused to consist of 78 variables from 49 participants. This cleaned dataset is the main focus of this Exploratory Data Analysis Report. A detailed code book, providing insights into the variable names and related data, is available on the project's Github under "Codebook".
+
+### **2.1 Data Cleaning**
+
+A clean dataset, free from errors and inconsistencies, provides a solid foundation for analysis. To begin the data cleaning process, various inconsistencies were addressed to ensure the data's reliability and usability. Income data, which was originally recorded in a mix of formats, underwent standardization. Income values were converted to numeric forms, and an outlier value of "760" was adjusted to "76000", assuming it to be a mistyped value. The column detailing the mother's daily cigarette consumption, `mom_numcig`, had several ambiguous entries like "None", ranges such as "20-25", and erroneous data like "2 black and miles a day" which were adjusted to numerical values of 0, 22, and 2 respectively. An improbable value of "44989" within the same column was marked as NA.
+
+Further cleaning included the binary conversion of certain columns, specifically those related to child ETS exposure. These columns were transformed from textual formats "1=Yes" and "2=No" to a binary system: 1 for "Yes" and 0 for "No". When examining the SWAN scores, entries with scores of 0 in both hyperactive and inattentive tests were marked as NA, based on patterns observed with other missing data. Finally, to simplify the dataset binary race indicator variables were merged into singular columns, `p_race` and `t_race`.
+
+### **2.2 Missing Data**
+
+![](images/missing_data.jpg){width="220"}
+
+From the table above, one notable limitation of the dataset is the prevalence of missing data. Several columns possess more than 25% missing entries with all variables missing at least a few enteries. This is a substantial concern given the sample size of only 49. Furthermore, the pattern of missing data across certain variables suggests the missingness is not at random, caused by unobserved factors, such as the method of data collection or the population's characteristics. One example is missingess pertaining to variables concerning a child's substance use which could be caused by response bias.
+
+Additionally, `mom_smoke_pp1`, indicating if the mother smoked postpartum, has 79.59% missing data. While not as extreme, this is consistent with other smoking-related columns and raises concerns about reliability. Considering the dataset's small sample size, imputation is not recommended. As seen in Figure 1, missing data is particularly concerning in columns pertaining to smoking exposure, child's autism spectrum, and parental management. Given the substantial proportion of missing data, imputation could introduce more bias, making the results less reliable.
+
+## **3. Preliminary Analysis**
+
+In this section, we delve into organizing all of the 78 variables within the dataset. These variables have been systematically grouped into four broad categories: outcomes, exposure, demographic, and Not of Interest.
+
+Outcomes captures variables related to Self-regulation, Externalizing, and Substance Use. This includes parent and child responses to the Brief Problem Monitor (bpm), Emotional Regulation Questionnaire (erq), Strengths and Weaknesses of Attention-Deficit/Hyperactivity Disorder Symptoms and Normal Behavior Scale (swan), as well as Child Substance use variables.
+
+Exposure contains all the variables directly related to SDP and ETS. This included prenatal and postnatal exposure as well as Urine cotinine amounts.
+
+Demographics includes all variables related to parent and child backgrounds. This included variables related to income, race, education, ethnicity, language spoken, and employment status. This is crucial for identifying potential confounding factors during regression.
+
+Variables Not of Interest all seem to have limited direct relevance to the main objectives of the study. They include the Parental Monitoring Questionnaire (excluded due to its lack of connection to the study outcomes for self-regulation) and variables concerning parental substance use in the past six months (excluded for their lack of connection to ETS and SDP variables which were recorded latest 5 years postpartum).
+
+### 3.1 Outcome Variables
+
+![](images/cor_mat_outcomes.jpg){width="336"}
+
+As seen in Figure 2 above, there is a strong correlation among the SWAN and BPM variables related to Attention (att) and Externalizing (ext). After exploring the questionnaires these variables seemed to all be related to a child's externalizing behavior tendencies. Meanwhile, although variables for BPM Internalizing (int) and ERQ data are not as tightly correlated, the questionnaires all focus on a child's ability to emotionally regulate. These two subgroups of externalizing and self-regulation will be used when creating our composite variables for these metrics.
+
+![](images/outcomes_tbl.jpg){width="270"}
+
+Above are the summary statistics for the outcome variables, an immediate observation from the table is the absence of extreme outliers. However, there's one red flag concerning data quality---each of these variables has roughly 20-30% missing data. As stated earlier the significant missing proportion may introduce biases and impact the analysis, warranting further scrutiny of any findings.
+
+### 3.2 Exposure Variables
+
+![](images/cor_mat_exposure.jpg){width="335"}
+
+From the above Figure, we can make out the strong inter-correlation within the SDP and ETS exposure variables and cotinine measures. One outlier however is the variable `mom_smoke_pp1`, which showcases a strange negative correlation with some exposure variables, this fact is most likely due to substantial missing data of about 80% from the column. Additionally, cotimean_pp6mo_baby's weak correlation with other ETS variables suggests it could be capturing different dimensions or aspects of exposure or could be influenced by external factors.
+
+The most alarming finding, however, is the correlation patterns observed within postpartum ETS exposure surveys from study one and two. There seems to be a clear disjunction between the two studies, likely because parents, in the second study, are trying to recall exposures almost a decade ago. This could introduce a recall bias, which is a grave concern, as this can skew our analysis.
+
+![](images/exposure_tbl_bin.jpg){width="248"}
+
+![](images/exposure_tbl_conjpg.jpg){width="271"}
+
+Upon inspection of the summary statistics for exposure variables, everything seems standard, except for the maximum values for the Cotinine related variables. A deeper dive into these variables revealed a single extreme outlier, seen in the maximum value for each variable. This child's Cotinine values both ETS and SDP were considerably higher than the rest---almost double the second highest. Notably, the same child also had missing data for various pivotal variables concerning outcomes and demographics, as such they were removed from the dataset.
+
+## **4. Composite Variable Creation**
+
+To simplify the large amout of variables within the dataset, composite variables were developed. These variables amalgamate several related metrics, allowing for a easier analysis. Drawing from the previously discussed groupings in Section 3, composite variables were established for Exposures: SDP and ETS, as well as Outcomes: Self Regulation (SR), Externalizing (EXT), and Substance Use (SU).
+
+Since many of the original variables were a mix of binary and continuous data, various strategies were used to standardize the different metrics. To begin a log transformation was applied to all variables related to Cotinine levels, this was done to reduce the positive skew of the data as many of the values were close to 0 with others being in the several hundreds. After this these values underwent Z-score normalization and then were all made positive with the lowest Z-score given a value of 0. This was done since the next step involved aggregating these new standardized values with the binary data concerning gestational and postpartum smoke exposure variables, with values of 0 signifying no exposure. After taking the average across these exposure values the composite variables for ETS and SDP were complete.
+
+The outcome composite variables follow a similar suit, utilizing Z-score normalization of BPM, ERQ and SWAN related variables to standardize the different scoring systems used. As said in Section 3, these values were then grouped into EXT and SR to create the composite externalizing and self-regulation metrics. Finally, a composite variable for Substance Use (SU) was generated based on whether the child had ever used marijuana, alcohol, cigarettes, or e-cigarettes before.
+
+### **4.1 Composite Variables: Summary Statistics**
+
+![](images/comp_tbl.jpg){width="254"}
+
+Upon initial observation the new composite variables were successfully standardized with no extreme outliers. One note however is the striking disparity in missing data percentages between the exposure and outcome groups. While the exposure variables (SDP and ETS) exhibit minimal missing data (both at 2%), the outcome variables present considerably more, ranging from 15% to 25%. This was mainly caused by missing values for one behavioral tests being linked to that Child also having missing data for the other behavioral tests. This could certainly impact analyses and should be considered when discussing limitations of this study.
+
+### **4.2 Interrelation of SDP/ETS**
+
+![](images/plot_ets_sdp.jpg){width="345"}
+
+The figure above illustrates the interrelation between SDP and ETS. Interestingly, there's a discernible bimodal distribution within childrens SDP exposure, suggesting two subgroups - low and high. For visualization purposes these groups will be separated out in following plots. Notably, high levels of SDP exposure appear to coincide with heightened ETS levels. In contrast, low SDP levels don't exhibit a strong association with ETS. This suggests that mothers who smoke during pregnancy (SDP) are potentially more likely to also expose their children to secondhand smoke (ETS) postnatally, whereas mothers who refrain from smoking during pregnancy do not necessarily guarantee an ETS-free environment for their children post-birth.
+
+## **5. Interrelation Between Exposure and Outcomes**
+
+![](images/cor_mat_comp.jpg){width="282"}
+
+The Figure above illustrates the correlation matrix between the exposure and outcome composite variables. From this we can see the previously discussed strong association between ETS and SDP. Additionally, while both exposure variables are connected to EXT and ER, the correlation with ETS is much stronger. Interestingly, SU does not share a strong correlation with exposure or outcome data, this could be attributed to the 25% missing data and potential issues stemming from response bias.
+
+### **5.1 Effect of ETS and SDP on Self-Regulation**
+
+![](images/sr_plot.jpg){width="345"}
+
+The visualization above highlights the relationship that has ETS exposure increases SR also increases signaling worse child self-regulation capabilities. This relation is similar between SDP and SR, albeit a milder trend.
+
+A rudimentary linear regression model was than created to examine the effects of ETS and SDP on self-regulation. It's vital to note that this model's variable selection was rudimentary. The initial model encompassed all demographic variables, which were then pruned based on their significance. Models were juxtaposed before and after this pruning using ANOVA.
+
+The model was formulated as: `SR ~ SDP + ETS + page + pethnic + pwhite + prace_other + tage + language + tethnic + taian` with covariates being selected from parent and child demographic data. Notably, ETS was found to be statistically significant with a p-value of 0.041 and an estimated coefficient of 0.710, with a standard error of 0.329 meaning controlling for all other factors for every point increase in ETS we would expect a .710 point increase in child SR levels. Important to note is that this model has an Adjusted R-squared: 0.3734, indicating that there remains a significant proportion of variance in SR that is not accounted for. Lastly, pethnic and prace_other were also found to statistically significant in this model.
+
+### **5.2 Effect of ETS and SDP on Externalizing** Behavior
+
+![](images/ext_plot.jpg){width="341"}
+
+Similar to the effects of and ETS on Self-regulation, as a child's ETS score increases so does the degree for externalizing behaviors. The relationship of SDP to externalizing behaviors, on the other hand, seems relatively indistinct, although the previous correlation analysis did indicate a mild positive relationship.
+
+Applying a linear regression model, using a similar variable selection approach used in the self-regulation model, was formulated as: EXT \~ SDP + ETS + pethnic + tage + language + taian + tblack. Interestingly, this model did not achieve statistical significance, evidenced by an Adjusted R-squared value of 0.1539. One explanation for this might be the weak correlation between BPM Internalizing and ERQ variables, potentially rendering the composite Externalizing variable less reliable in this context.
+
+### **5.3 Effect of ETS and SDP on Substance Use**
+
+![](images/su_plot.jpg){width="337"}
+
+As seen in the figure above for children exhibiting low SDP levels, there's a noticeable pattern where increased substance use aligns with heightened ETS exposure. Suprisingly, within the high SDP level bracket however an increase in SU seems to be paired with diminished ETS. This divergence could potentially be attributed to the constrained sample size, with only 2 cases of children at a high SDP level registering an SU of 1, and only 5 cases at an SU of 0.
+
+Utilizing a logistic regression model, echoing the variable selection methodology from previous models, was formulated as: SU \~ SDP + ETS + pethnic + employ + pedu + income + tage + language + tethnic. Interestingly, this exploration found neither SDP nor ETS to be statistically relevant. The sole significant determinant emerged as tage, bearing a p-value of 0.0468. Additionally, deviance analysis presented a null deviance of 32.055 (with 28 degrees of freedom) and a residual deviance of 16.307 (with 19 degrees of freedom). The reduction in deviance from indicates the model with predictors is a better fit than the null model, but it still has unexplained variance, pointing to potential missing factors or complexities.
+
+## **6.** Limitations
+
+During this analysis several potential limitations to using this dataset were discovered. Firstly, a striking concern arose from the substantial missing data in crucial columns, which could potentially distorted findings. Given the modest sample size of only 49 participants, it's debatable how effectively observations can be generalized. With several notable variables such as child substance use and postnatal smoke exposure having large amounts of data missing, the robustness of any conclusions made will certainty be effected.
+
+Another challenge was found in the form of recall biases; this was particularly evident from the disparities between postpartum ETS exposure surveys across two distinct studies. In the latter study, parents were tasked with recalling exposures from nearly a decade ago, possibly compromising the accuracy of their responses. Lastly, the regression models, despite shedding light on significant relationships, were rooted in a rather basic variable selection process. This rudimentary approach might have either missed key confounding factors or tailored the models too closely to our specific sample.
+
+## 7. Conclusion
+
+In this reports preliminary exploratory data analysis on the potential effects of SDP and ETS on children's self-regulation, externalizing behavior, and substance use, early findings suggest possible negative implications of both SDP and ETS. ETS, in particular, appeared to have a significant impact on children's self-regulation. Our EDA also indicated a potential relationship between SDP and ETS, suggesting that mothers who smoked during pregnancy might also expose their children to secondhand smoke postnatally. However, these are initial insights, and the connection between these exposures and outcomes requires further examination. This EDA serves as a starting point for guiding more in-depth work in the future.
+
+## Code Appendix
+
+```{r}
+# Loading in data and Libraries
+library(tidyverse)
+library(purrr)
+library(broom)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(summarytools)
+library(reshape2)
+library(gtsummary)
+
+df <- read.csv("Data/project1.csv")
+child_df <- df
+```
+
+```{r}
+### Cleaning income
+
+# 1. Handle the mistypo
+child_df$income[child_df$income == "760"] <- "76000"
+
+# 2. Remove commas
+child_df$income <- gsub(",", "", child_df$income)
+
+# 3. Convert empty strings to NA
+child_df$income[child_df$income == ""] <- NA
+
+# 4. Convert the character column to numeric
+child_df$income <- as.numeric(child_df$income)
+
+### Cleaning mom_numcig
+
+# 1. Replace "None" with "0"
+child_df$mom_numcig[child_df$mom_numcig == "None"] <- "0"
+
+# 2. Handle the range "20-25"
+child_df$mom_numcig[child_df$mom_numcig == "20-25"] <- "22"
+
+# 3. Convert "2 black and miles a day" to "2"
+child_df$mom_numcig[grep("black and miles", child_df$mom_numcig)] <- "2"
+
+# 4. Handle the value "44989"
+child_df$mom_numcig[child_df$mom_numcig == "44989"] <- NA
+
+# 5. Convert the character column to numeric after replacing empty strings with NA
+child_df$mom_numcig[child_df$mom_numcig == ""] <- NA
+child_df$mom_numcig <- as.numeric(child_df$mom_numcig)
+
+### Convert columns to Binary 0/1
+columns_to_convert <- c("mom_smoke_16wk", "mom_smoke_22wk", 
+                        "mom_smoke_32wk","mom_smoke_pp1", "mom_smoke_pp2", 
+                        "mom_smoke_pp12wk", "mom_smoke_pp6mo")
+
+for (column in columns_to_convert) {
+  child_df[[column]][child_df[[column]] == "1=Yes"] <- 1
+  child_df[[column]][child_df[[column]] == "2=No"] <- 0
+  
+  # Convert column to numeric
+  child_df[[column]] <- as.numeric(child_df[[column]])
+}
+
+### Fill in 30 days previous columns
+sub_ever <- c("cig_ever", "e_cig_ever", "mj_ever", "alc_ever")
+sub_30 <- c('num_cigs_30', 'num_e_cigs_30', 'num_mj_30', 'num_alc_30')
+
+# Loop over each substance
+for (i in 1:4) {
+  
+  # Set the number column to 0 where the ever column is NA or 0
+  child_df[is.na(child_df[[sub_ever[i]]]) | 
+             child_df[[sub_ever[i]]] == 0, sub_30[i]] <- 0
+}
+
+# Clean SWAN variables, when both tests have scores of 0, these should be NA
+child_df$swan_hyperactive[with(df, swan_hyperactive == 0 & 
+                                 swan_inattentive == 0)] <- NA
+child_df$swan_inattentive[with(df, swan_hyperactive == 0 & 
+                                 swan_inattentive == 0)] <- NA
+
+# Replace prefer not to answer with NA
+child_df$tethnic[child_df$tethnic == 2] <- NA
+```
+
+```{r}
+# Cleaning Race column from several binary indicator variables to one prace
+# and trace variable (accounts for ind. indicating multiple races by 
+# grouping them into biracial)
+
+# Change prace columns
+child_df <- child_df %>%
+  mutate(
+    race_count = rowSums(select(., 
+                                paian, pasian, pnhpi, pblack, pwhite, 
+                                prace_other), na.rm = TRUE), 
+    p_race = case_when(
+      race_count > 1 ~ "Biracial/Multiracial",
+      paian == 1 ~ "AIAN",
+      pasian == 1 ~ "Asian",
+      pnhpi == 1 ~ "NHPI",
+      pblack == 1 ~ "Black",
+      pwhite == 1 ~ "White",
+      prace_other == 1 ~ "Other",
+      TRUE ~ NA_character_  # default case when all 0
+    )
+  ) %>%
+  select(-race_count) # remove the temporary race_count column
+
+# Change trace columns
+child_df <- child_df %>%
+  mutate(
+    race_count = rowSums(select(., 
+                                taian, tasian, tnhpi, tblack, twhite, 
+                                trace_other), na.rm = TRUE), 
+    t_race = case_when(
+      race_count > 1 ~ "Biracial/Multiracial",
+      taian == 1 ~ "AIAN",
+      tasian == 1 ~ "Asian",
+      tnhpi == 1 ~ "NHPI",
+      tblack == 1 ~ "Black",
+      twhite == 1 ~ "White",
+      trace_other == 1 ~ "Other",
+      TRUE ~ NA_character_  # default case when all 0
+    )
+  ) %>%
+  select(-race_count) # remove the temporary race_count column
+```
+
+```{r}
+missing <- child_df %>%
+  summarise(
+    N = colSums(is.na(child_df)),
+    prop = round(colMeans(is.na(child_df))*100, 2)) %>%
+  mutate(Variables = colnames(child_df)) %>%
+  arrange(desc(prop)) %>%
+  filter(prop > 25) %>%
+  as.data.frame()
+
+
+kable(missing[c(3,2,1)], 
+      caption ='Variables with More Than 25% Missing Data',
+      col.names = c("Variable","Proportion (%)", "n")) %>%
+  kable_styling(bootstrap_options = c("hover"), full_width = F) %>%
+  row_spec(0, background = "#333333", color = "white")  %>%
+  row_spec(6:8, background = "lightpink", color = "black") %>%
+  row_spec(9:17, background = "lightblue", color = "black")
+```
+
+```{r}
+# Extract outcome variables
+outcomes <- child_df %>%
+                  select(swan_hyperactive, swan_inattentive, bpm_att,
+                      bpm_att_p, bpm_ext, bpm_ext_p, bpm_int, 
+                      bpm_int_p, erq_cog, erq_exp)
+
+# Compute correlation matrix
+cor_matrix <- cor(outcomes, use = "complete.obs")
+
+# Melt the correlation matrix for ggplot
+cor_df <- melt(cor_matrix) 
+# cor_df <- cor_df[abs(cor_df$value) > 0.5, ]
+
+ggplot(data = cor_df, aes(x = Var1, y = Var2)) + 
+  geom_tile(aes(fill = value), color = "white") + 
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Correlation") + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1),
+        axis.text.y = element_text(size = 10)) +
+  coord_fixed() +
+  labs(x = NULL, y = NULL, title=
+         "Correlation Matrix for Outcome Variables") 
+```
+
+```{r}
+summary_table <- outcomes %>%
+  summarise(
+    Missing = round(colSums(is.na(.)/nrow(.)), 2) * 100,
+    Mean = round(colMeans(outcomes,na.rm=TRUE), 2),
+    SD = round(apply(outcomes, 2, sd, na.rm = TRUE), 2),
+    Min = round(apply(outcomes, 2, min, na.rm=TRUE), 2),
+    Max = round(apply(outcomes, 2, max, na.rm=TRUE), 2),
+    var = colnames(outcomes)
+  )
+
+summary_table[,c(6,2,3,4,5,1)] %>%
+  mutate() %>%
+  mutate_all(linebreak) %>%
+  kbl(caption = "Outcome Variables Summary Statistics",
+  col.names = linebreak(c("Variable", "Mean", "SD", 
+                          "Min","Max", 'Missing %')),
+  booktabs = T, escape = T, align = "c") %>%
+  kable_styling(full_width = FALSE, 
+                latex_options = c('hold_position'),
+                font_size = 14) %>%
+  row_spec(0, background = "#333333", color = "white")
+```
+
+```{r}
+# mom_smoke_pp6mo and smoke_exposure_6mo both measure the same thing (smoking 6 months post-p)
+smoke_exposure_6mo <- with(child_df, ifelse(!is.na(mom_smoke_pp6mo) & 
+                                mom_smoke_pp6mo == 1 |
+                      !is.na(smoke_exposure_6mo) & 
+                        smoke_exposure_6mo == 1, 
+                      1, 
+                      coalesce(mom_smoke_pp6mo, smoke_exposure_6mo, NA))
+             )
+
+
+# Extract sdp/ets variables
+ind_vars <- child_df %>%
+                  select(mom_smoke_16wk, mom_smoke_22wk, mom_smoke_32wk,
+                         cotimean_34wk, mom_smoke_pp1, mom_smoke_pp2,
+                         mom_smoke_pp12wk, cotimean_pp6mo,
+                         cotimean_pp6mo_baby, smoke_exposure_6mo,
+                         smoke_exposure_12mo, smoke_exposure_2yr,
+                         smoke_exposure_3yr, smoke_exposure_4yr,
+                         smoke_exposure_5yr)
+
+# Compute correlation matrix
+cor_matrix <- cor(ind_vars, use = "pairwise.complete.obs")
+
+# Melt the correlation matrix for ggplot
+cor_df <- melt(cor_matrix)
+
+ggplot(data = cor_df, aes(x = Var1, y = Var2)) + 
+  geom_tile(aes(fill = value), color = "white") + 
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Correlation") + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 9, hjust = 1),
+        axis.text.y = element_text(size = 10)) +
+  coord_fixed() +
+  labs(x = NULL, y = NULL, title=
+         "Correlation Matrix for Exposure Variables") 
+```
+
+```{r}
+# Identify the continuous and binary variables
+continuous_vars <- c("cotimean_34wk", "cotimean_pp6mo_baby", "cotimean_pp6mo")
+binary_vars <- setdiff(names(ind_vars), continuous_vars)
+
+# Summary for continuous variables
+continuous_summary <- ind_vars %>%
+  select(all_of(continuous_vars)) %>%
+  summarise(
+    var = colnames(.),
+    Mean = round(colMeans(., na.rm = TRUE), 2),
+    SD = round(apply(., 2, sd, na.rm = TRUE), 2),
+    Min = round(apply(., 2, min, na.rm = TRUE), 2),
+    Max = round(apply(., 2, max, na.rm = TRUE), 2),
+    Missing = round(colSums(is.na(.)/nrow(.)), 2) * 100
+  )
+
+# Summary for binary variables
+binary_summary <- ind_vars %>%
+  select(all_of(binary_vars)) %>%
+  summarise(
+    var = colnames(.),
+    Zero = colSums(. == 0, na.rm = TRUE),
+    One = colSums(. == 1, na.rm = TRUE),
+    Missing = round(colSums(is.na(.)/nrow(.)), 2) * 100
+  )
+
+binary_summary %>%
+  mutate() %>%
+  mutate_all(linebreak) %>%
+  kbl(caption = "ETS/SDP Exposure Summary Statistics",
+  col.names = linebreak(c("Variable","Yes", "No", "Missing %")),
+  booktabs = T, escape = T, align = "c") %>%
+  kable_styling(full_width = FALSE, 
+                latex_options = c('hold_position'),
+                font_size = 14) %>%
+  row_spec(0, background = "#333333", color = "white")
+
+continuous_summary %>%
+  mutate() %>%
+  mutate_all(linebreak) %>%
+  kbl(caption = "Cotinine Variable Summary Statistics",
+  col.names = linebreak(c("Variable", "Mean", "SD", 
+                          "Min", "Max", "Missing %")),
+  booktabs = T, escape = T, align = "c") %>%
+  kable_styling(full_width = FALSE, 
+                latex_options = c('hold_position'),
+                font_size = 14) %>%
+  row_spec(0, background = "#333333", color = "white")
+
+
+# Child with parent_id == 54702 removed because their cotimean_pp6mo and
+# cotimean_pp6mo_baby amounts were twice that of the second highest, this 
+# child also had missing data for variables associated with swan, bpm, 
+# postnatal smoke exosure, and substance use
+child_df <- child_df[child_df$parent_id != 54702,]
+```
+
+```{r}
+##### Creating Composite Variables ####
+
+### Exposure Variables (ETS/SDP)
+
+# Applying a log transformation (after adding a constant to handle zeros)
+cotimean_34wk_log <- log1p(child_df$cotimean_34wk)
+cotimean_pp6mo_baby_log <- log1p(child_df$cotimean_pp6mo_baby)
+cotimean_pp6mo_log <- log1p(child_df$cotimean_pp6mo)
+
+# Z-score normalization of Contimean Variables
+cotimean_34wk_z <- scale(child_df$cotimean_34wk)[,1]
+cotimean_pp6mo_baby_z <- scale(child_df$cotimean_pp6mo_baby)[,1]
+cotimean_pp6mo_z <- scale(child_df$cotimean_pp6mo)[,1]
+
+# Shift by the absolute min value to ensure all values are non-negative
+shifted_34wk <- cotimean_34wk_z + abs(min(cotimean_34wk_z, na.rm=TRUE))
+baby_shifted <- cotimean_pp6mo_baby_z + 
+  abs(min(cotimean_pp6mo_baby_z, na.rm=TRUE))
+shifted <- cotimean_pp6mo_z + abs(min(cotimean_pp6mo_z, na.rm=TRUE))
+
+# Create Composite SDP Variable using Gestational Data
+child_df$SDP <- with(child_df, rowMeans(
+  cbind(mom_smoke_16wk, mom_smoke_22wk, 
+        mom_smoke_32wk, shifted_34wk), na.rm=TRUE))
+
+child_df$SDP_lvl <- ifelse(child_df$SDP < .5, 0, 1)
+
+# Create Composite ETS Variable using Postpartum Data
+child_df$ETS <- with(child_df, 
+                     rowMeans(cbind(baby_shifted, shifted,
+                            mom_smoke_pp1, mom_smoke_pp2, mom_smoke_pp12wk, 
+                            smoke_exposure_6mo, smoke_exposure_12mo,
+                            smoke_exposure_2yr, smoke_exposure_3yr,
+                            smoke_exposure_4yr, smoke_exposure_5yr), 
+                            na.rm=TRUE))
+
+### Outcome Variables
+
+# Calculate the z-scores for the selected variables
+swan_hyperactive_z <- scale(child_df$swan_hyperactive)[,1]
+swan_inattentive_z <- scale(child_df$swan_inattentive)[,1]
+
+bpm_att_z <- scale(child_df$bpm_att)[,1]
+bpm_ext_z <- scale(child_df$bpm_ext)[,1]
+bpm_int_z <- scale(child_df$bpm_int)[,1]
+bpm_ext_p_z <- scale(child_df$bpm_ext_p)[,1]
+bpm_att_p_z <- scale(child_df$bpm_att_p)[,1]
+bpm_int_p_z <- scale(child_df$bpm_int_p)[,1]
+
+erq_cog_z <- scale(child_df$erq_cog)[,1]
+erq_exp_z <- scale(child_df$erq_exp)[,1]
+
+# Calculate the composite externalizing metric
+child_df$EXT <- rowMeans(cbind(
+  swan_hyperactive_z, swan_inattentive_z, bpm_att_z, 
+  bpm_ext_z, bpm_ext_p_z, bpm_att_p_z), na.rm=TRUE)
+
+# Calculate the composite self-regulation metric
+child_df$SR <- rowMeans(cbind(
+  bpm_int_z, bpm_int_p_z, erq_cog_z, erq_exp_z), na.rm=TRUE)
+
+# For Composite Substance Use Variable
+child_df$SU <- with(child_df, 
+                          ifelse(e_cig_ever == 1 | mj_ever == 1 | 
+                                   cig_ever == 1 | alc_ever == 1, 1, 0))
+```
+
+```{r}
+# Scatterplot with regression lines for each SDP_lvl group
+ggplot(child_df, aes(x = SDP, y = ETS)) +
+  geom_point(aes(color = factor(SDP_lvl)), shape = 16, size = 2) +
+  geom_smooth(color='grey', method = "lm", se = FALSE) +
+  scale_color_manual(values = c("lightblue", "pink"), 
+                     name = "SDP Level", 
+                     breaks = c(0, 1),
+                     labels = c("Low", "High")) +
+  theme_minimal() + labs(
+  title = "Interrelatedness of Prenatal and Postnatal Exposure to Smoking",
+    x = "Smoking During Pregnancy (SDP)",
+    y = "Environmental Tobacco Smoke (ETS)"
+  )
+```
+
+```{r}
+# Extract relevant variables
+vars <- child_df %>% select(SDP, ETS, SR, EXT, SU)
+
+# Compute summary statistics for each variable
+summaries <- vars %>%
+  summarise(
+    var = colnames(.),
+    Mean = round(colMeans(.,na.rm=TRUE), 2),
+    SD = round(apply(., 2, sd, na.rm = TRUE), 2),
+    Min = round(apply(., 2, min, na.rm = TRUE), 2),
+    Max = round(apply(., 2, max, na.rm = TRUE), 2),
+    Missing = round(colSums(is.na(.)/nrow(.)), 2) * 100
+  )
+
+summaries %>%
+  mutate() %>%
+  mutate_all(linebreak) %>%
+  kbl(caption = "Composite Variables Summary Statistics",
+  col.names = linebreak(c("Variable", "Mean", "SD", 
+                          "Min","Max", "Missing %")),
+  booktabs = T, escape = T, align = "c") %>%
+  kable_styling(full_width = FALSE, 
+                latex_options = c('hold_position'),
+                font_size = 16) %>%
+  row_spec(0, background = "#333333", color = "white") 
+```
+
+```{r}
+# Compute correlation matrix
+cor_matrix <- cor(vars, use = "complete.obs")
+
+# Melt the correlation matrix for ggplot
+cor_df <- melt(cor_matrix)
+
+ggplot(data = cor_df, aes(x = Var1, y = Var2)) + 
+  geom_tile(aes(fill = value), color = "white") + 
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Correlation") + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1),
+        axis.text.y = element_text(size = 10)) +
+  coord_fixed() +
+  labs(x = NULL, y = NULL, title=
+         'Composite Variable Correlation Matrix') 
+```
+
+```{r}
+
+table1 <- child_df %>%
+  select(page, psex, plang, pethnic, p_race, employ, 
+         pedu, income, tage, language, tethnic, t_race) %>%
+  tbl_summary(
+    by = NULL,
+    type = all_continuous() ~ "continuous2",
+    missing = "no"
+  ) %>%
+  modify_header(label = "**Variables**")
+
+# Print the table
+table1
+```
+
+```{r}
+
+model <- lm(SR ~ SDP + ETS + page + pethnic + pwhite + prace_other + 
+              tage + language + tethnic + taian, 
+            data = child_df)
+
+
+# Create the table
+summary(model)
+
+# Dropped page + psex + plang + language bcuz they did not have a strong effect or improve the model very much
+```
+
+```{r}
+model <- lm(EXT ~ SDP + ETS + pethnic + tage + language +
+              taian + tblack, 
+            data = child_df)
+
+
+# Create the table
+summary(model)
+```
+
+```{r}
+logistic_model_simple <- glm(SU ~ SDP + ETS + pethnic + employ + pedu +
+              income + tage + language + tethnic,
+                             family = "binomial", data = child_df)
+summary(logistic_model_simple)
+
+# Dropped page, psex, plang, p_race, t_race, bcuz they did not have a strong effect or improve the model very much
+```
+
+```{r}
+ggplot(child_df, aes(x=ETS, y=SR)) + 
+  geom_point(aes(color = factor(SDP_lvl)), shape = 16, size = 2) +
+  geom_smooth(method = "lm", se = FALSE, color='grey') +
+  scale_color_manual(values = c("lightblue", "pink"), 
+                     name = "SDP Level", 
+                     breaks = c(0, 1),
+                     labels = c("Low", "High")) +
+    theme_minimal() + labs(
+      title = "Effect of ETS on Self-Regulation by SDP Level",
+      x = "Environmental Tobacco Smoke (ETS)",
+      y = "Self-Regulation Composite Score"
+  )
+```
+
+```{r}
+ggplot(child_df, aes(x=ETS, y=EXT)) + 
+  geom_point(aes(color = factor(SDP_lvl)), shape = 16, size = 2) +
+  geom_smooth(method = "lm", se = FALSE, color='grey') +
+  scale_color_manual(values = c("lightblue", "pink"), 
+                     name = "SDP Level", 
+                     breaks = c(0, 1),
+                     labels = c("Low", "High")) +
+    theme_minimal() + labs(
+      title = "Effect of ETS on Externalizing by SDP Level",
+      x = "Environmental Tobacco Smoke (ETS)",
+      y = "Externalizing Composite Score"
+  )
+```
+
+```{r}
+ggplot(child_df %>% filter(!is.na(SU)), aes(x=ETS, y=factor(SU), fill = factor(SDP_lvl))) + 
+  geom_boxplot(outlier.shape = NA) + # removes outliers
+  scale_fill_manual(values = c("lightblue", "pink"), 
+                     name = "SDP Level", 
+                     breaks = c(0, 1),
+                     labels = c("Low", "High")) +
+    theme_minimal() + labs(
+      title = "Effect of ETS on Substance Use by SDP Level",
+      x = "Environmental Tobacco Smoke (ETS)",
+      y = "Substance Use (SU)"
+  )
+```

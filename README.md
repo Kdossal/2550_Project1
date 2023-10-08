@@ -26,10 +26,12 @@ The primary goal of this research is to study the correlation between SDP & ETS 
 # Files
 ## Code
 `first_data_clean.R:` Code used to clean the original data to the data using in this project report.
+
 `project1.qmd:` File used to produce report, houses all code used in the report and is well documented.
 
 ## Data
 `project1.csv:` Data used in this project report.
+
 `Codebook.csv:` Data Codebook descriping variables and descriptions.
 
 ## Images

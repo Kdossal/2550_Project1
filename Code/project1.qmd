@@ -67,6 +67,10 @@ The most alarming finding, however, is the correlation patterns observed within 
 
 Upon inspection of the summary statistics for exposure variables, everything seems standard, except for the maximum values for the Cotinine-related variables. A deeper dive into these variables revealed a single extreme outlier, seen in the maximum value for each variable. This child's Cotinine values both ETS and SDP were considerably higher than the rest---almost double the second highest. Notably, the same child also had missing data for various pivotal variables concerning outcomes and demographics, as such they were removed from the dataset.
 
+### 3.3 Demographic Variables
+
+A thorough examination of demographic variables was conducted, in the interest of brevity and to align with the report's focus, here are the most salient findings. The study's parents had a median age of 37, with an IQR of 35 to 39, and 98% (40 individuals) belonged were of female sex. While 37% (15 individuals) identified with a speaking another language at home, the racial distribution was dominated by White parents at 61%, with NHPI and Other both at 15%. Employment varied, with 54% holding status '2' for Full-Time and parental education spread across categories, with 37% at '3' for some college, additionally the median household income stood at \$48,424. Teenagers aged 12 to 15 were almost equally represented, though about 5% were 16 years old. For teens, 30% identified with speaking another language at home and 42% identified with being Hispanic/Latino, while the race distribution saw White teens at 39%, Biracial/Multiracial at 22%, and Black at 19%. Overall demographic data presented no large issues, however one note is that all variables contained missing data of about 12-25%.
+
 ## **4. Composite Variable Creation**
 
 To simplify the large amount of variables within the dataset, composite variables were developed. These variables amalgamate several related metrics, allowing for an easier analysis. Drawing from the previously discussed groupings in Section 3, composite variables were established for Exposures: SDP and ETS, as well as Outcomes: Self Regulation (SR), Externalizing (EXT), and Substance Use (SU).
@@ -584,7 +588,6 @@ table1 <- child_df %>%
   tbl_summary(
     by = NULL,
     type = all_continuous() ~ "continuous2",
-    missing = "no"
   ) %>%
   modify_header(label = "**Variables**")
 
